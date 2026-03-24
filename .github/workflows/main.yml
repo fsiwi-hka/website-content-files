@@ -25,7 +25,7 @@ jobs:
 
             cd /opt/public
 
-            rm *.md
+            find . -type f -name "*.md" -delete
             
 
       - name: Copy content to server

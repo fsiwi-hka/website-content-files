@@ -1,0 +1,45 @@
+name: Deploy Content
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Copy content to server
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "./"
+          target: /opt/public
+          strip_components: 1
+          rm: true
+          debug: true
+
+      - name: Fix permissions
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+
+            # sicherstellen dass der ordner existiert
+            mkdir -p /opt/public
+
+            # owner setzen (optional, je nach setup)
+            chown -R $USER:$USER /opt/public
+
+            # lesezugriff für backend/container
+            chmod -R 755 /opt/public
